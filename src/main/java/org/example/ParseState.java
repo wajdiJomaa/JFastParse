@@ -1,10 +1,10 @@
 package org.example;
 
-public class ParseState {
+public class ParseState<T> {
     private ParseResult parseResult;
     private String message;
     private Document document;
-    private Object value;
+    private T value;
 
     public ParseResult getParseResult() {
         return parseResult;
@@ -30,27 +30,27 @@ public class ParseState {
         this.document = document;
     }
 
-    public Object getValue() {
+    public T getValue() {
         return value;
     }
 
-    public void setValue(Object value) {
+    public void setValue(T value) {
         this.value = value;
     }
 
     public ParseState() {
     }
 
-    public ParseState(ParseResult parseResult, String message, Document document, Object value) {
+    public ParseState(ParseResult parseResult, String message, Document document, T value) {
         this.parseResult = parseResult;
         this.message = message;
         this.document = document;
         this.value = value;
     }
 
-    public static ParseState init(String text){
+    public static ParseState<Object> init(String text){
         Document document = new Document(text, 0);
-        ParseState parseState = new ParseState();
+        ParseState<Object> parseState = new ParseState<>();
         parseState.setDocument(document);
         parseState.setParseResult(ParseResult.OK);
 

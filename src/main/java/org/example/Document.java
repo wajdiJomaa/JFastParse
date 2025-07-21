@@ -1,5 +1,7 @@
 package org.example;
 
+import javax.print.Doc;
+
 public class Document {
     private String text;
     private int index;
@@ -25,7 +27,7 @@ public class Document {
         this.index = index;
     }
 
-    public void advance(int value){
-        this.index += value;
+    public Document advance(int value){
+        return new Document(text, index + value);
     }
 }
