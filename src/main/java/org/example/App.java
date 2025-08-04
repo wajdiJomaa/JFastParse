@@ -1,9 +1,6 @@
 package org.example;
 
-import org.example.parsers.PChoice;
-import org.example.parsers.Parser;
-import org.example.parsers.PSequence;
-import org.example.parsers.PString;
+import org.example.parsers.*;
 
 import java.util.List;
 
@@ -25,6 +22,13 @@ public class App
         System.out.println(s3.parse("ABCDEF").getValue());
         System.out.println(s4.parse("ABC1").getValue());
 
+
+        Parser<List<Integer>> ls = new PSepBy<>(new PNumber(), ",").notNull();
+        System.out.println(ls.parse("123,145,134,12,1,11,15").getValue());
+//        [123, 145, 134, 12, 1, 11, 15]
+
+        System.out.println(ls.parse("").getMessage());
+//      Found Null value while parsing
 
     }
 }

@@ -33,5 +33,23 @@ abstract public class Parser<T> {
         };
     }
 
+    public Parser<T> notNull() {
+        Parser <T> parser = this;
+        return new Parser<T>() {
+            @Override
+            protected ParseState<T> parse(ParseState<?> parseState) throws ParseException {
+                ParseState<T> oldState = parser.parse(parseState);
+                if (parseState.getParseResult().equals(ParseResult.ERROR)) return oldState;
+                if (parser.isNull(oldState)) return new ParseState<>(ParseResult.ERROR, "Found Null value while parsing"
+                ,parseState.getDocument(), null);
+                return oldState;
+            }
+        };
+    }
+
+
+    protected boolean isNull (ParseState<T> p) {
+        return false;
+    }
 
 }
