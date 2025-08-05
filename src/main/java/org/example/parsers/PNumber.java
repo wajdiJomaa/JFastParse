@@ -11,7 +11,6 @@ public class PNumber extends Parser<Integer>{
         if (parseState.getParseResult().equals(ParseResult.ERROR))
             return new ParseState<>(parseState.getParseResult(), parseState.getMessage(), parseState.getDocument(), null);
 
-        Integer value = null;
         int index = parseState.getDocument().getIndex();
         StringBuilder strRes = new StringBuilder();
 

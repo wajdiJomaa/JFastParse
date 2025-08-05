@@ -35,6 +35,6 @@ public class PSequence<T> extends Parser<List<T>> {
                 return new ParseState<>(ParseResult.ERROR, "Error Parsing", parseState.getDocument(), null);
             values.add(pState.getValue());
         }
-        return new ParseState<>(ParseResult.OK, null, parseState.getDocument(), values);
+        return new ParseState<>(ParseResult.OK, null, pState != null ? pState.getDocument() : parseState.getDocument(), values);
     }
 }

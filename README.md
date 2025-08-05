@@ -3,33 +3,96 @@ JFastParse is a parse combinators library in java
 installation:
 no need for external dependancies just clone the project
 
-Usage:
 Some sections are currently under construction
 
-Basic sample:
+todo:
+- add error handling
+- add support to remove spaces
+
+Json parser:
 
 ```java
-       Parser<String> s1 = new PString("ABC");
-        Parser<Integer> i1 = new PString("1").map(s -> 1);
-        Parser<String> s2 = new PString("DEF");
+public class JsonParser extends ContextManager {
 
-        Parser<List<String>> s3 = new PSequence<>(s1, s2);
-        Parser<List<Object>> s4 = new PSequence<>(s1, i1);
+    // Parses an integer value and wraps it into JsonInteger
+    Parser<JsonInteger> intParser = new PNumber().map(JsonInteger::new);
 
-        Parser<String> s5 = new PChoice<>(s2, s1);
-        System.out.println(s5.parse("ABCDEF").getValue());
+    // Parses either "true" or "false", maps it to JsonBool
+    Parser<JsonBool> boolParser = new PChoice<>(new PString("true"), new PString("false"))
+            .map(b -> b.equals("true") ? new JsonBool(true) : new JsonBool(false));
 
-        System.out.println(s1.parse("ABCD").getValue());
-        System.out.println(i1.parse("1").getValue());
-        System.out.println(s3.parse("ABCDEF").getValue());
-        System.out.println(s4.parse("ABC1").getValue());
+    // Parses a string wrapped in double quotes and wraps it into JsonString
+    Parser<JsonString> stringParser = new PBetween<>("\"", "\"", new PLetters())
+            .map(JsonString::new);
+
+    // Parses a list: [value1, value2, ...]
+    Parser<JsonList> listParser =
+            new PBetween<>("[", "]",
+                    new PSepBy<>(
+                            new PChoice<>(
+                                    intParser,
+                                    boolParser,
+                                    stringParser,
+                                    lazy("listParser", JsonList.class) // allow recursive lists
+                            ),
+                            "," // elements are comma-separated
+                    )
+            ).map(JsonList::new);
+
+    // Parses an object: {"key": value, ...}
+    Parser<JsonObject> objectParser =
+            new PBetween<>("{", "}",
+                    new PSepBy<>(
+                            new PSequence<>( // parses: string ":" value
+                                    stringParser,                    // key
+                                    new PString(":"),                // colon
+                                    new PChoice<>(                   // value can be any JSON type
+                                            intParser,
+                                            boolParser,
+                                            stringParser,
+                                            listParser,
+                                            lazy("objectParser", JsonObject.class) // recursive objects
+                                    )
+                            ),
+                            "," // key-value pairs are comma-separated
+                    )
+            ).map(lists -> {
+                // Build a map from the parsed key-value pairs
+                HashMap<String, JsonData> map = new HashMap<>();
+                for (List<Object> l : lists) {
+                    map.put(((JsonString) l.get(0)).getS(), ((JsonData) l.get(2)));
+                }
+                return new JsonObject(map);
+            });
+
+    // Top-level parser: chooses the appropriate parser based on input
+    Parser<JsonData> jsonParser = new PChoice<>(boolParser, stringParser, intParser, listParser, objectParser);
+
+    // Entry point for parsing a JSON string
+    public JsonData parse(String file) throws ParseException {
+        // Register recursive parsers
+        bind("listParser", listParser);
+        bind("objectParser", objectParser);
+
+        // Parse the input
+        ParseState<JsonData> pr = jsonParser.parse(file);
+
+        // Print debug info
+        System.out.println("Parse Result: " + pr.getParseResult());
+        System.out.println("Parse Message: " + pr.getMessage());
+
+        return pr.getValue();
+    }
+    
+    public static void main(String[] args) throws ParseException {
+        JsonParser jsonParser = new JsonParser();
+        JsonData jd = jsonParser.parse("{\"x\":[1,[2,2]]}");
+        //JsonObject{map={x=JsonList{list=[JsonInteger{i=1}, JsonList{list=[JsonInteger{i=2}, JsonInteger{i=2}]}]}}}
+        //no support for spaces
+        System.out.println(jd);
+    }
 
 
-        Parser<List<Integer>> ls = new PSepBy<>(new PNumber(), ",").notNull();
-        System.out.println(ls.parse("123,145,134,12,1,11,15").getValue());
-//        [123, 145, 134, 12, 1, 11, 15]
-
-        System.out.println(ls.parse("").getMessage());
-//      Found Null value while parsing 
+}
 
 ```

@@ -46,7 +46,8 @@ public class PSepBy<T> extends Parser<List<T>> {
                 }
             }
 
-            state = new ParseState<>(ParseResult.OK, null, state.getDocument().advance(separator.length()), null);
+            if (!stop)
+                state = new ParseState<>(ParseResult.OK, null, state.getDocument().advance(separator.length()), null);
         }
 
         return new ParseState<>(ParseResult.OK, null, state.getDocument(), values);
